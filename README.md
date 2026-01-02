@@ -1,4 +1,7 @@
 # 100DaysOfCodeChallenge
+
+### ALL CODE FILES ARE IN THE MASTER BRANCH
+
 My journey through the 100 Days of Code Python Challenge BootCamp
 # 100 Days of Code – Python Challenge 
 
