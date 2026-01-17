@@ -34,7 +34,7 @@ def draw_spirograph(size_gap):
         nunu_the_wise.circle(100)
         nunu_the_wise.setheading(nunu_the_wise.heading() +size_gap)
 
-draw_spirograph(40)
+draw_spirograph(5)
 
 
 
