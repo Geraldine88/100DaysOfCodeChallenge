@@ -38,7 +38,7 @@ Inside each folder, you’ll find:
 ## Credits
 This challenge follows the **100 Days of Code: Python Bootcamp** by **Dr. Angela Yu**.
 All credit for the curriculum and project ideas goes to the instructor.
-This repository reflects **my own solutions, modifications, experiments, and learning process**.
+This repository reflects **some of my own solutions, modifications, experiments, and learning process**.
 
 ## Notes
 Some solutions may not be optimal — this repository is meant to show **learning in progress**.
