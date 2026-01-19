@@ -35,9 +35,6 @@ ball = Ball()
 scoreboard = ScoreBoard()
 
 
-
-
-
 screen.listen()
 screen.onkey(r_paddle.go_up, "Up")
 screen.onkey(r_paddle.go_down, "Down")
