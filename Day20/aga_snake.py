@@ -41,6 +41,19 @@ class Snake:
         # TODO: Move the snake, changing its direction
         #self.snake_parts.append(snake)
 
+    #reset snake so it doesn't go out of screen
+    def reset(self):
+        """
+        When a snake dies, we don't want it to linger on the screen. So we make it dissapear
+        by sending it to a location not found on the screen.
+        Our screen is 600x600, so I'm sending it to a place where it was not found on the screen.
+        2000,2000
+        """
+        for seg in self.snake_parts:
+            seg.goto(2000, 2000)
+        self.snake_parts.clear()
+        self.appearance_sk()
+        self.head = self.snake_parts[0]
 
     #Class will increase the snake length my 1 everytime it eats food
     def add_body(self):
@@ -92,10 +105,6 @@ class Snake:
         # self.snake_parts[0].forward(20)
 
             self.head.setheading(RIGHT)
-
-
-
-
 
 
 

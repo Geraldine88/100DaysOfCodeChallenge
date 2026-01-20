@@ -52,6 +52,8 @@ screen.tracer(0)
 #  position them turtle 1 is at (0,0), tutle 2 is 20px to the left and
 #  the third turtle is 20px to the left of the second. Each turtle is 20x20
 
+# TODO: GIVE THE USER CERTAIN AMOUNT OF LIVES
+lives_left = 3
 
 game_on = True
 # While game is on, move each segment
@@ -72,15 +74,36 @@ while game_on:
 
     # detect wall collision
     if snake.head.xcor() > 280 or snake.head.xcor() < -280 or snake.head.ycor() > 280 or snake.head.ycor() < -280:
-        game_on = False
-        scoreboard.game_over()
+        lives_left -= 1
+        if lives_left == 0:
+            game_on = False
+            scoreboard.game_over()
+        else:
+            scoreboard.show_lives_lost(lives_left)
+            screen.update()
+            time.sleep(1.5)
+            scoreboard.reset_score()
+            snake.reset()
+
 
     # detect tail collision
     # if head collides with any other part of the snake's body, game over
     for seg in snake.snake_parts[1:]:
-        if snake.head.distance(seg) < 10:
-            game_on = False
-            scoreboard.game_over()
+        if seg == snake.head:
+            pass
+        elif snake.head.distance(seg) < 10:
+            lives_left -= 1
+            if lives_left == 0:
+                game_on = False
+                scoreboard.game_over()
+            else:
+                scoreboard.show_lives_lost(lives_left)
+                screen.update()
+                time.sleep(1.5)
+                scoreboard.reset_score()
+                snake.reset()
+                #scoreboard.game_over()
+            break
 
 
 
