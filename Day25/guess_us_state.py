@@ -46,13 +46,17 @@ while len(guesses) < 50:
 
     if user_answer == "Exit":
 
-        missing_states = []
-        for s in state_name:
-            if s not in user_answer:
-                missing_states.append(s)
+        # missing_states = []
+        # for s in state_name:
+        #     if s not in user_answer:
+        #         missing_states.append(s)
+
+        # TODO: List comprehending the code above
+        missing_states = [s for s in state_name if s not in user_answer]
 
         missing_states_df = pd.DataFrame(missing_states)
         missing_states_df.to_csv("missing_states_to_learn.csv", index=False)
+
         break
 
     if user_answer in state_name:
