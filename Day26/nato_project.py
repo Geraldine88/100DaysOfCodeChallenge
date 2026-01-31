@@ -15,6 +15,16 @@ data = {row.letter:row.code for (index, row) in df.iterrows()}
 print(data)
 
 # TODO: 2. Create a list of phonetic code words from a word that user inputs
-user_input = input("Enter a word: ").upper()
-data_list = [data[letter] for letter in user_input]
-print(data_list)
+def make_phonetic():
+    user_input = input("Enter a word: ").upper()
+    try:
+        data_list = [data[letter] for letter in user_input]
+    except KeyError:
+        print("Invalid Input. Only letters of the alphabet are allowed.")
+        # Getting user to type in the word again in case the error is raised
+        # recursion?
+        make_phonetic()
+    else:
+        print(data_list)
+
+make_phonetic()
