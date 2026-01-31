@@ -15,8 +15,14 @@ timer = None
 # ---------------------------- TIMER RESET ------------------------------- #
 def reset():
 
+    """
+    after_cancel cancels a scheduled callback function that was previously set up
+    using the window.after() method
+    """
     window.after_cancel(timer)
 
+    # method in Tkinter is used to modify the configuration options (attributes or properties)
+    # of a specific item (or items) that have already been created on a Canvas widget
     canvas.itemconfig(timerTxt, text="00:00", fill="white")
 
     title.config(text="Timer", bg=YELLOW, fg=GREEN)
