@@ -1,9 +1,11 @@
+from re import search
 from tkinter import *
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from random import randint, choice, shuffle
 import random
 import pyperclip
+import json
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 # From day 5: password generator app
@@ -43,40 +45,89 @@ def generate_password():
 def save_entries():
     # creating data.txt
     #f = open("data.txt", "x")
+    website = web_entry.get()
+
+    # creating a dictionary for json dump
+    new_dict = {
+        website: {
+            'email': email_entry.get(),
+            'password': pwd_entry.get(),
+        }
+    }
 
     # if user did not type anything, generate message box
     if len(web_entry.get()) == 0 or len(pwd_entry.get()) == 0:
         messagebox.showerror("Error", "Please enter make sure no field is empty")
     else:
-        is_good = messagebox.askokcancel(title=web_entry.get(), message=f"These are the details entered:"
-                                                              f"\n Email: {email_entry.get()}\n"
-                                                              f"\n Password: {pwd_entry.get()}\n"
-                                                              f"Is this okay to save?")
-        if is_good:
+        # is_good = messagebox.askokcancel(title=web_entry.get(), message=f"These are the details entered:"
+        #                                                       f"\n Email: {email_entry.get()}\n"
+        #                                                       f"\n Password: {pwd_entry.get()}\n"
+        #                                                       f"Is this okay to save?")
+        # if is_good:
 
-            click_count = 0
-            # TODO: 2 - Write to the data inside the entries to a data.txt when the 'Add' button is clicked
-            with open("data.txt", "a") as f:
+        #click_count = 0
+        # TODO: 2 - Write to the data inside the entries to a data.txt when the 'Add' button is clicked
+        try:
+            with open("data.json", "r") as f:
                 # TODO: 3 - Each website, email and password combo should be on a new line inside the file
                 #everytime the 'Add' button is clicked, we write to a new line
-                for i in range(click_count + 1):
-                    f.write(f"{web_entry.get()} || {email_entry.get()} || {pwd_entry.get()}\n")
+                #To write to a json file, we use file.dump(), not file.write()
+                #for i in range(click_count + 1):
+                # f.write(f"{web_entry.get()} || {email_entry.get()} || {pwd_entry.get()}\n")
 
-                # TODO: 4 - All fields need to be cleared after the 'Add' button is clicked
-                web_entry.delete(0, END)
-                pwd_entry.delete(0, END)
+                #Write to json
+                #json.dump(new_dict, f, indent=4)
+
+                # Read from a json file
+                data = json.load(f)
+            # print(data) # Python dictionary
+        except FileNotFoundError:
+            #creating data.json
+            with open("data.json", "w") as f:
+                json.dump(new_dict, f, indent=4)
+        else:
+
+            # Update json with new data
+            data.update(new_dict)
+
+            with open("data.json", "w") as f:
+                #Write updated data back into the file
+                json.dump(data, f, indent=4)
+        finally:
+
+            # TODO: 4 - All fields need to be cleared after the 'Add' button is clicked
+            web_entry.delete(0, END)
+            pwd_entry.delete(0, END)
+
+# ---------------------------- FIND PASSWORD -------------------------- #
+def search_pwd():
+    website = web_entry.get()
+    try:
+        with open("data.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        messagebox.showerror(title="Error", message="No Such file exits.")
+    else:
+        if website in data:
+            email = data[website]['email']
+            password = data[website]['password']
+
+            messagebox.showinfo(title=website, message=f'Email: {email} \nPassword: {password}')
+        else:
+            messagebox.showinfo(title="Error", message=f"No such website, {website} exists in your.")
+
 
 
 # ---------------------------- UI SETUP ------------------------------- #
 
 window = Tk()
 window.title("Manage Password with LB")
-window.configure(padx=20, pady=20)
+window.configure(padx=40, pady=40)
 
 # # Load the image using PIL
 # # Make sure to replace "background.jpg" with your image file path
 bg_img = Image.open("personal_brand.png")
-bg_img = bg_img.resize((900, 700), Image.LANCZOS)
+bg_img = bg_img.resize((700, 500), Image.LANCZOS)
 photo = ImageTk.PhotoImage(bg_img)
 
 # Create a Label to hold the image
@@ -95,7 +146,7 @@ background_label.lower()
 ################################# WHITE CONTENT FRAME #################################
 
 content_frame = Frame(window, bg="white")
-content_frame.grid(column=0, row=0, columnspan=3, rowspan=6, padx=10, pady=10)
+content_frame.grid(column=0, row=0, columnspan=3, rowspan=6, padx=20, pady=20)
 
 ################################# CANVAS #################################
 
@@ -108,20 +159,20 @@ canvas.grid(column=1, row=0)
 ################################# WEBSITE #################################
 website_label = Label(content_frame, text="Website", width=35, bg="white")
 website_label.config(padx=1, pady=2)
-website_label.grid(column=0, row=1)
+website_label.grid(column=0, row=1, pady=(5, 2))
 # website entry
-web_entry = Entry(content_frame, width=55, bg="white")
+web_entry = Entry(content_frame, width=36 , bg="white")
 # entry.focus focuses the cursor into the particular entry. In this case website entry
 web_entry.focus()
-web_entry.grid(column=1, row=1, columnspan=2)
+web_entry.grid(column=1, row=1, pady=(5, 2))
 
 ################################# EMAIL/USERNAME ##########################
 email_label = Label(content_frame, text="Email/Username", width=35, bg="white")
 email_label.config(padx=1, pady=2)
-email_label.grid(column=0, row=2)
+email_label.grid(column=0, row=2, pady=(5, 2))
 # email/username entry
 email_entry = Entry(content_frame, width=55)
-email_entry.grid(column=1, row=2, columnspan=2)
+email_entry.grid(column=1, row=2, columnspan=2, pady=(5, 2))
 # prepopulating email/user entry with most common email using insert
 # 0: START-> WHERE WE WANNA FIT THE EMAIL, END WILL PLACE IT AT THE END
 email_entry.insert(0, "gmail@gmail.com")
@@ -129,21 +180,26 @@ email_entry.insert(0, "gmail@gmail.com")
 ################################# PASSWORD #################################
 pwd_label = Label(content_frame, text="Password", bg="white")
 pwd_label.config(padx=1, pady=2)
-pwd_label.grid(column=0, row=3)
+pwd_label.grid(column=0, row=3, pady=(5, 2))
 # password entry
 pwd_entry = Entry(content_frame, width=36)
-pwd_entry.grid(column=1, row=3)
+pwd_entry.grid(column=1, row=3, pady=(5, 2))
 
 ################################# BUTTONS ##################################
 # 1 - GENERATE PASSWORD
 generate_pwd_btn = Button(content_frame, text="Generate Password", bg="white", command=generate_password)
 generate_pwd_btn.config(padx=1, pady=5)
-generate_pwd_btn.grid(column=2, row=3)
+generate_pwd_btn.grid(column=2, row=3, pady=(5, 2))
 
 # 2 - ADD BUTTON
 add_btn = Button(content_frame, text="Add", bg="white", width=47, command=save_entries)
 add_btn.config(padx=1, pady=5)
-add_btn.grid(column=1, row=4, columnspan=2)
+add_btn.grid(column=1, row=4, columnspan=2, pady=(5, 2))
+
+# 3 - SEARCH BUTTON
+search_btn = Button(content_frame,text="Search", bg="#5DADE2", fg="white", width=13, command=search_pwd)
+search_btn.config(padx=1, pady=5)
+search_btn.grid(column=2, row=1, pady=(5, 2))
 
 # # Keep a reference to the image object to prevent it from being garbage collected
 background_label.image = photo
