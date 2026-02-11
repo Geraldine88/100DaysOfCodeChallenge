@@ -1,24 +1,31 @@
 import requests
-#from datetime import datetime
+# from datetime import datetime
 from twilio.rest import Client
+import os
+from dotenv import load_dotenv
 
-API_KEY = ""
+load_dotenv()
+
+
+# API_KEY = os.environ.get("OWM_API_KEY")
+API_KEY = os.getenv("OWM_API_KEY")
+
 
 # --------------------------------- TWILIO DETAILS -------------------------------------------
-account_sid = ""
-auth_token = ""
+account_sid = os.getenv("ACCOUNT_SID")
+auth_token = os.getenv("AUTH_TOKEN")
 
 # --------------------------------------------------------------------------------------------
 
 # Open weather maps endpoint
-OWM_ENDPOINT = "http://api.openweathermap.org/data/2.5/forecast"
+OWM_ENDPOINT = "https://api.openweathermap.org/data/2.5/forecast"
 
 # Weather parameters: For Seattle, WA
 WEATHER_PARAMS = {
-    "lat": 47.603230,
-    "lon": -122.330276,
+    "lat": 47.606209,
+    "lon": -122.332069,
     "appid": API_KEY,
-    "cnt": 4, # cnt is the number of timestamps, which will returned 4 time intervals.
+    "cnt": 4,  # cnt is the number of timestamps, which will returned 4 time intervals.
 }
 
 response = requests.get(
@@ -33,20 +40,18 @@ weather_data = response.json()
 # Get the actual weather condition
 # If ID code any timestamp is < 700, advice user to bring an umbrella in the next 12 hours
 
-#Print out weather id from weather data
+# Print out weather id from weather data
 weather_data_list = weather_data["list"]
-#print(weather_data_list[0]['weather'][0]['id'])
+# print(weather_data_list[0]['weather'][0]['id'])
 """
     weather_data_list[0] → first dictionary
 
     ['weather'] → list of weather objects
-    
+
     [0] → first weather dictionary
-    
+
     ['id'] → the actual value
 """
-
-
 
 """
 # Condition codes
@@ -64,10 +69,6 @@ what_to_do = ["bring umbrella" if _ < 700 else "no umbrella"
 print(what_to_do)
 """
 
-
-
-
-
 # OR better still
 
 is_rain = False
@@ -79,19 +80,16 @@ if is_rain:
     # CREATING A TWILIO CLIENT TO SEND MESSAGE
     client = Client(account_sid, auth_token)
     message = client.messages.create(
-        body="Rain alerter. Remember to take an umbrella!☔",
-        from_= "+18774613445",
-        to=""
+        from_="whatsapp:+14155238886",
+        body="Rain Alerter. It's humid enough.Remember to bring an umbrella ☔",
+        to="whatsapp:+12063964652"
     )
 else:
     client = Client(account_sid, auth_token)
     message = client.messages.create(
-        body="Rain alerter. No need for an umbrella",
-        from_= "+18774613445",
-        to="+"
+        from_="whatsapp:+14155238886",
+        body="Rain Alerter. No need to bring an umbrella 🌂",
+        to="whatsapp:+12063964652"
     )
 
     print(message.status)
-
-
-
