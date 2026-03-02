@@ -1,8 +1,15 @@
 import requests
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
-USERNAME = "geraldine2026"
-TOKEN = "TokenG26*2026"
+# USERNAME = "geraldine2026"
+# TOKEN = "TokenG26*2026"
+
+load_dotenv()
+USERNAME = os.getenv("PIXEL_USERNAME")
+TOKEN = os.getenv("PIXEL_TOKEN")
+
 GRAPH_ID = "graph1"
 TODAY_TIME = datetime.now().strftime("%Y%m%d")
 YESTERDAY_TIME = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
@@ -105,5 +112,6 @@ update_params = {
 # )
 #
 # print(response.text)
+
 
 
