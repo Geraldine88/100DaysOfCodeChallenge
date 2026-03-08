@@ -1,29 +1,30 @@
-from twilio.rest import Client
 import os
+from twilio.rest import Client
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class NotificationManager:
-    #This class is responsible for sending notifications with the deal flight details.
     def __init__(self):
         self.client = Client(
-            os.environ['TWILIO_SID'],
-            os.environ['TWILIO_AUTH_TOKEN']
+            os.environ["TWILIO_SID"],
+            os.environ["TWILIO_AUTH_TOKEN"]
         )
-        self.from_number = os.environ['TWILIO_VIRTUAL_NUMBER']
-        self.to_number = os.environ['TWILIO_VERIFIED_NUMBER']
+        self.from_number = os.environ["TWILIO_VIRTUAL_NUMBER"]
+        self.to_number = os.environ["TWILIO_VERIFIED_NUMBER"]
 
-    def send_message(self, message):
-        smsMsg = self.client.messages.create(
-            body= message,
-            from_= self.from_number,
-            to = self.to_number
+    def send_sms(self, message):
+        sms = self.client.messages.create(
+            body=message,
+            from_=self.from_number,
+            to=self.to_number
         )
-        print(f"SMS sent: {smsMsg.sid}")
+        print(f"SMS sent: {sms.sid}")
 
     def send_whatsapp(self, message):
-        whatsappMsg = self.client.messages.create(
-            body= message,
-            from_= self.from_number,
-            to = self.to_number
+        whatsapp = self.client.messages.create(
+            body=message,
+            from_=f"whatsapp:{self.from_number}",
+            to=f"whatsapp:{self.to_number}"
         )
-        print(f"Whatsapp sent: {whatsappMsg.sid}")
+        print(f"WhatsApp sent: {whatsapp.sid}")
