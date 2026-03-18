@@ -12,12 +12,18 @@ SHEETY_USERNAME = os.getenv("BASICAUTH_SHEETY_USERNAME")
 SHEETY_PASSWORD = os.getenv("BASICAUTH_SHEETY_PASSWORD")
 SHEETY_ENDPOINT = os.getenv("SHEETY_ENDPOINT")
 
+SHEETY_USERS_ENDPOINT = os.getenv("SHEETY_USERS_ENDPOINT")
+SHEETY_PRICES_ENDPOINT =os.getenv("SHEETY_PRICES_ENDPOINT")
+
 class DataManager:
     #This class is responsible for talking to the Google Sheet.
     def __init__(self):
         self.user = SHEETY_USERNAME
         self.password = SHEETY_PASSWORD
         self.endpoint = SHEETY_ENDPOINT
+
+        self.sheety_prices_endpoint = SHEETY_PRICES_ENDPOINT
+        self.sheety_users_endpoint = SHEETY_USERS_ENDPOINT
 
         self.auth = HTTPBasicAuth(self.user, self.password)
         self.Destination_data = {}
@@ -49,6 +55,14 @@ class DataManager:
            put_endpoint = f"{self.endpoint}/{city['id']}"
            response = requests.put(put_endpoint, json=new_data, auth=self.auth)
            print(response.text)
+
+    # Return the data of users
+    def get_customer_emails(self):
+        response = requests.get(self.sheety_users_endpoint, auth=self.auth)
+        data = response.json()
+        return data["users"]
+
+
 
 
 

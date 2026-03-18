@@ -25,6 +25,21 @@ six_months = (datetime.now() + timedelta(days=180)).strftime("%Y-%m-%d")
 sheet_data = data_manager.getDestination_data()
 pprint(sheet_data)
 
+# ************************ GET CUSTOMER EMAILS **************************** #
+customer_data = data_manager.get_customer_emails()
+
+# Detect correct email key
+email_key = "email"
+if len(customer_data) > 0:
+    # auto-detect if it's emailAddress instead
+    if "emailAddress" in customer_data[0]:
+        email_key = "emailAddress"
+
+emails = [row[email_key] for row in customer_data]
+
+print("\nCustomer emails:")
+print(emails)
+
 # ************************ FILL MISSING IATA CODES **************************** #
 for row in sheet_data:
     if row["iataCode"] in ("", None):
@@ -50,16 +65,29 @@ for r in sheet_data:
         print(f"Skipping {r['city']} — no IATA code.")
         continue
 
-    flight = flight_search.find_cheapest_flight(
+    # Try direct flights first
+    flight = flight_search.check_flights(
         origin,
         dest,
         tomorrow,
-        six_months
+        six_months,
+        is_direct=True
     )
 
-    # Skip if no flight found
-    if flight.price in (None, "N/A"):
-        print(f"No flights found for {r['city']}")
+    # If no direct flights → try indirect
+    if flight is None:
+        print(f"No direct flights for {r['city']}. Searching indirect flights...")
+        flight = flight_search.check_flights(
+            origin,
+            dest,
+            tomorrow,
+            six_months,
+            is_direct=False
+        )
+
+    # If still None → skip
+    if flight is None:
+        print(f"No flights found at all for {r['city']}")
         continue
 
     # Convert price to float safely
@@ -75,20 +103,44 @@ for r in sheet_data:
     print(f"{r['city']} : £{current_price}")
     print(f"Comparing {current_price} with {lowest_price}")
 
-    # Build WhatsApp message for EVERY city
+    # Determine stop text
+    if flight.stops == 0:
+        stop_text = "Direct flight"
+    else:
+        stop_text = f"{flight.stops} stop(s)"
+
+    # WhatsApp message
     if current_price < lowest_price:
         message = (
             f"🔥 DEAL FOUND!\n"
-            f"Only £{current_price} to fly from {origin} to {dest}.\n"
+            f"GBP {current_price} from {origin} to {dest}.\n"
+            f"{stop_text}\n"
             f"Depart: {flight.out_date}\nReturn: {flight.return_date}\n"
-            f"Lowest price on sheet: £{lowest_price}"
+            f"Lowest price on sheet: GBP {lowest_price}"
         )
     else:
         message = (
             f"📊 Price Update for {r['city']}:\n"
-            f"Current price: £{current_price}\n"
-            f"Lowest price on sheet: £{lowest_price}\n"
-            f"No deal yet, but keeping an eye on it!"
+            f"Current price: GBP {current_price}\n"
+            f"{stop_text}\n"
+            f"Lowest price on sheet: GBP {lowest_price}\n"
+            f"No deal yet, but monitoring!"
         )
 
+    # Send WhatsApp
     notification_manager.send_whatsapp(message)
+
+    # Email message
+    email_message = (
+        f"Low price alert!\n\n"
+        f"Destination: {r['city']}\n"
+        f"Price: GBP {current_price}\n"
+        f"Route: {stop_text}\n"
+        f"From: {flight.origin_airport}\n"
+        f"To: {flight.destination_airport}\n"
+        f"Depart: {flight.out_date}\n"
+        f"Return: {flight.return_date}\n"
+    )
+
+    # Send email to all customers
+    notification_manager.send_email(emails, email_message)

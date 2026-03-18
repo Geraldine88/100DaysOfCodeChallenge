@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+#from datetime import datetime
 import os
 from dotenv import load_dotenv
 from flight_data import FlightData
@@ -34,12 +34,12 @@ class FlightSearch:
         header = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        body = {
+        data = {
             'grant_type': 'client_credentials',
             'client_id': self._api_key,
             'client_secret': self._api_secret
         }
-        response = requests.post(url=self._token_endpoint, headers=header, data=body)
+        response = requests.post(url=self._token_endpoint, headers=header, data=data)
         result = response.json()
         return result["access_token"]
 
@@ -62,15 +62,16 @@ class FlightSearch:
             return SPECIAL_CASES[cityName]
 
         response = requests.get(url=IATA_ENDPOINT, headers=headers, params=params)
+        data = response.json()
 
-        print(f"Status code {response.status_code}. Airport IATA: {response.text}")
+        #print(f"Status code {response.status_code}. Airport IATA: {response.text}")
 
         # If APT Call fails
 
-        if response.status_code != 200:
-            print(f"Error fetching IATA for city {cityName}: {response.text}")
-            return None
-        data = response.json()
+        # if response.status_code != 200:
+        #     print(f"Error fetching IATA for city {cityName}: {response.text}")
+        #     return None
+        # data = response.json()
 
         # No results
         if "data" not in data or len(data["data"]) == 0:
@@ -108,6 +109,41 @@ class FlightSearch:
 
         return data
 
-    def find_cheapest_flight(self, origin, destination, departDate, returnDate):
+    # def find_cheapest_flight(self, origin, destination, departDate, returnDate):
         data = self.searchFlights(origin, destination, departDate, returnDate)
         return FlightData(data)
+
+    def check_flights(self,  origin, destination, depart, return_date, is_direct=True):
+        headers = {"Authorization": f"Bearer {self.token}"}
+        params = {
+            "originLocationCode": origin,
+            "destinationLocationCode": destination,
+            "departureDate": depart,
+            "returnDate": return_date,
+            "adults": 1,
+            "nonStop": "true" if is_direct else "false",
+            "max": 5
+        }
+
+        response = requests.get(FLIGHT_ENDPOINT, headers=headers, params=params)
+        data = response.json().get("data", [])
+
+        if not data:
+            return None
+
+        flight = data[0]
+
+        # Count stops
+        itinerary = flight["itineraries"][0]
+        segments = itinerary["segments"]
+        stops = len(segments) - 1
+
+        return FlightData(
+            price=float(flight["price"]["total"]),
+            origin_airport=segments[0]["departure"]["iataCode"],
+            destination_airport=segments[-1]["arrival"]["iataCode"],
+            out_date=segments[0]["departure"]["at"].split("T")[0],
+            return_date=flight["itineraries"][1]["segments"][0]["departure"]["at"].split("T")[0],
+            stops=stops
+        )
+
