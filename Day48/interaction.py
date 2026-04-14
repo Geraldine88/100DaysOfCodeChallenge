@@ -57,14 +57,17 @@ first_name = driver.find_element(By.NAME, value="fName")
 
 last_name = driver.find_element(By.NAME, value="lName")
 
-email = driver.find_element(By. NAME, value="email")
+email = driver.find_element(By.NAME, value="email")
 
 # Fill in the form
 first_name.send_keys("Ginger")
-last_name.send_keys("The Coder")
+last_name.send_keys("TheCoder")
 email.send_keys("gingerme26coder@gmail.com")
 
 #submit_button = driver.find_element(By.CSS_SELECTOR, value="btn btn-lg btn-primary btn-block")
 submit_button = driver.find_element(By.CSS_SELECTOR, value="form button")
 submit_button.click()
 # submit_button.send_keys(Keys.ENTER)
+
+
+#driver.quit()
