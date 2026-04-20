@@ -3,3 +3,5 @@
 client_secret.json
 __pycache__/
 *.pyc
+chrome_profile/
+.idea/
