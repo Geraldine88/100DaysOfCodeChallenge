@@ -10,8 +10,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+import time
 import os
 load_dotenv()
 
@@ -21,6 +22,7 @@ load_dotenv()
 ACCOUNT_USER_NAME = os.getenv("ACCOUNT_USER_NAME")
 ACCOUNT_EMAIL = os.getenv('ACCOUNT_EMAIL')
 ACCOUNT_PASSWORD = os.getenv('ACCOUNT_PASSWORD')
+
 # 4. TODO: Run Selenium and have it navigate to the gym website:
 GYM_URL = "https://appbrewery.github.io/gym/"
 ####################################################################################################
@@ -46,68 +48,73 @@ That way every time you quit Chrome and re-run your Selenium script, it keeps al
 chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
 driver = webdriver.Chrome(options=chrome_options)
 
-# 5. TODO: Create your account manually in the browser that Selenium opens
-driver.get(GYM_URL)
-
 # The site needs to wait before clicking the submit button
 wait = WebDriverWait(driver, 10)
 # ****************************************************************************************************
 
+####################################################################################################
+#                                       RETRY WRAPPER
+####################################################################################################
+def retry(func, retries=7, description=""):
+    for attempt in range(1, retries+1):
+        try:
+            print(f"\n🔄 Attempt {attempt}/{retries}: {description}")
+            return func()
+        except Exception as e:
+            print(f"⚠️ Failed attempt {attempt}: {e}")
+            if attempt == retries:
+                print("❌ All retries failed.")
+                raise
+            time.sleep(1)
+
+####################################################################################################
+#                                       LOGIN FUNCTION
+####################################################################################################
 """
     STEP 2: 🔐 Automated Login - No More Manual Sign-ins!
 """
+def login():
+    driver.get(GYM_URL)
 
-# Write code to:
+    # 1. TODO: Click the login button
+    login_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button#login-button.Navigation_button__uyKX2")))
+    login_btn.click()
 
-# 1. TODO: Click the login button
-login = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button#login-button.Navigation_button__uyKX2")))
-login.click()
+    # 2. TODO: Fill in your email and password
+    email_input = wait.until(EC.presence_of_element_located((By.ID, "email-input")))
+    password_input = driver.find_element(By.ID, "password-input")
 
-# 2. TODO: Fill in your email and password
-"""Pro tip 2: Use presence_of_element_located to verify that an element is present on the page."""
-email = wait.until(EC.presence_of_element_located((By.ID, "email-input")))
-password = driver.find_element(By.ID, "password-input")
+    email_input.clear()
+    email_input.send_keys(ACCOUNT_EMAIL)
 
-login_submit = wait.until(EC.element_to_be_clickable((By.ID,"submit-button")))
+    password_input.clear()
+    password_input.send_keys(ACCOUNT_PASSWORD)
 
-# Filling in the form with credentials
-email.send_keys(ACCOUNT_EMAIL)
-password.send_keys(ACCOUNT_PASSWORD)
+    # 3. TODO: Submit the form
+    submit_btn = wait.until(EC.element_to_be_clickable((By.ID, "submit-button")))
+    submit_btn.click()
 
-# 3. TODO: Submit the form
+    # 4. TODO: Verify you're logged in by checking for the "Class Schedule" page
+    wait.until(EC.presence_of_element_located((By.XPATH, "//h1[contains(text(), 'Class Schedule')]")))
+    print("✅ Login successful!")
 
-login_submit.click()
-print("After submit, current URL:", driver.current_url)
-
-
-# 4. TODO: Verify you're logged in by checking for the "Class Schedule" page
-# print(GYM_URL)
-# driver.get(GYM_URL)
-wait.until(EC.presence_of_element_located((By.XPATH, "//h1[contains(text(), 'Class Schedule')]")))
-print("Login successful!")
-# ****************************************************************************************************
-
+####################################################################################################
+#                                       BOOKING FUNCTION
+####################################################################################################
 """
     Book Your First Class - Tuesday at 6pm 📅
 """
-
-"""
-Hints:
-
-The default filter shows "Next 7 Days" - perfect!
-
-Parse the day and time from each class card
-
-Look for patterns in the HTML structure
-
-Right click to inspect various elements in the class table. 
-Do you see a pattern in the naming of IDs?
-"""
-
-# 1. TODO: Find the next Tuesday 6pm class (any type - Yoga, Spin, or HIIT)
-
-def book_next_tuesday_6pm(driver):
+def book_tue_thu_6pm_classes():
     wait = WebDriverWait(driver, 10)
+
+    # Counters
+    new_bookings = 0
+    waitlists_joined = 0
+    already_booked = 0
+    total_target_classes = 0
+
+    # Detailed list for summary
+    details = []
 
     # Make sure the filter is set to "Next 7 Days"
     select = Select(driver.find_element(By.ID, "day-filter"))
@@ -125,11 +132,11 @@ def book_next_tuesday_6pm(driver):
         )
         day_title = day_group.find_element(By.TAG_NAME, "h2").text
 
-        # Check if this is a Tuesday
-        if "Tue" not in day_title:
+        # Only Tuesday or Thursday
+        if not ("Tue" in day_title or "Thu" in day_title):
             continue
 
-        # Check if this is a 6:00 PM class
+        # Only 6:00 PM classes
         time_text = card.find_element(
             By.CSS_SELECTOR,
             "p[id^='class-time-']"
@@ -138,25 +145,106 @@ def book_next_tuesday_6pm(driver):
         if "6:00 PM" not in time_text:
             continue
 
-        # Get the class name
+        total_target_classes += 1
+
+        # Class name
         class_name = card.find_element(
             By.CSS_SELECTOR,
             "h3[id^='class-name-']"
         ).text
 
-        # Book the class
-        button = card.find_element(
-            By.CSS_SELECTOR,
-            "button[id^='book-button-']"
-        )
-        button.click()
+        # Check if already booked/waitlisted
+        try:
+            card.find_element(By.CSS_SELECTOR, "button[disabled]")
+            already_booked += 1
+            details.append(f"[Already Booked] {class_name} on {day_title}")
+            print(f"Already booked/waitlisted: {class_name} on {day_title}")
+            continue
+        except:
+            pass
 
-        print(f"✓ Booked: {class_name} on {day_title} at {time_text} 🎉")
-        return
+        # Try booking
+        try:
+            book_button = card.find_element(By.CSS_SELECTOR, "button[id^='book-button-']")
+            book_button.click()
+            new_bookings += 1
+            details.append(f"[New Booking] {class_name} on {day_title}")
+            print(f"✓ Successfully booked: {class_name} on {day_title}")
+            continue
 
-    print("No Tuesday 6pm class found.")
+        except:
+            # Try waitlist
+            try:
+                waitlist_button = card.find_element(By.CSS_SELECTOR, "button[id^='waitlist-button-']")
+                waitlist_button.click()
+                waitlists_joined += 1
+                details.append(f"[New Waitlist] {class_name} on {day_title}")
+                print(f"✓ Joined waitlist for: {class_name} on {day_title}")
+                continue
+            except:
+                print(f"Unexpected: No valid button found for {class_name} on {day_title}")
+                continue
 
-#print("Login successful!")
+    # Summary
+    print("\n--- BOOKING SUMMARY ---")
+    print(f"New bookings: {new_bookings}")
+    print(f"New waitlist entries: {waitlists_joined}")
+    print(f"Already booked/waitlisted: {already_booked}")
+    print(f"Total Tuesday & Thursday 6pm classes: {total_target_classes}")
 
-# Call your booking function
-book_next_tuesday_6pm(driver)
+    print("\n--- DETAILED CLASS LIST ---")
+    for item in details:
+        print(f"  • {item}")
+
+    return new_bookings + waitlists_joined + already_booked, details
+
+####################################################################################################
+#                                       GET BOOKINGS FUNCTION
+####################################################################################################
+"""
+    Step 7: Verify Class bookings on the "My Bookings" Page
+"""
+def get_my_bookings():
+    print("\n ----- VERIFYING MY BOOKINGS PAGE ----")
+
+    my_bookings_link = driver.find_element(By.ID, "my-bookings-link")
+    my_bookings_link.click()
+
+    wait.until(EC.presence_of_element_located((By.ID, "my-bookings-page")))
+
+    verified = 0
+
+    all_cards = driver.find_elements(By.CSS_SELECTOR, "div[id*='card-']")
+
+    for c in all_cards:
+        try:
+            when_parag = c.find_element(By.XPATH, ".//p[strong[text()='When:']]")
+            when_text = when_parag.text
+
+            if ("Tue" in when_text or "Thu" in when_text) and "6:00 PM" in when_text:
+                class_name = c.find_element(By.TAG_NAME, "h3").text
+                print(f" ✓ Verified: {class_name}")
+                verified += 1
+
+        except:
+            pass
+
+    return verified
+
+####################################################################################################
+#                                       RUN SCRIPT WITH RETRIES
+####################################################################################################
+retry(login, description="Logging in")
+
+expected_total, details = retry(book_tue_thu_6pm_classes, description="Booking Tue/Thu 6pm classes")
+
+verified_total = retry(get_my_bookings, description="Verifying bookings")
+
+print("\n--- FINAL RESULT ---")
+print(f"Expected: {expected_total}")
+print(f"Verified: {verified_total}")
+
+if expected_total == verified_total:
+    print("🎉 SUCCESS: All bookings verified!")
+else:
+    print("❌ MISMATCH: Some bookings missing.")
