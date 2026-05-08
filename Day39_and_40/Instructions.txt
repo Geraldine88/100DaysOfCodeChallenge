@@ -1,0 +1,100 @@
+Program Requirements
+
+1    Use the Flight Search and Sheety API to populate your own copy of the Google Sheet with
+     International Air Transport Association (IATA) codes for each city.
+     Most of the cities in the sheet include multiple airports, you want the city code
+     (not the airport code see here).
+
+2    Use the Flight Search API to check for the cheapest flights from tomorrow to 6 months
+     later for all the cities in the Google Sheet.
+
+3    If the price is lower than the lowest price listed in the Google Sheet then send an SMS
+        (or WhatsApp Message) to your own number using the Twilio API.
+
+4    The SMS should include the departure airport IATA code, destination airport IATA code,
+     flight price and flight dates.
+
+Notes and Gotchas
+
+Avoid hitting your rate limit on your trial accounts by not using too many destination
+airports in your google Sheet (use 5 or at most 10)
+
+Also, the test Amadeus test API does not include all airports.
+You may not be able to retrieve prices for many routes flights.
+Try and stick to popular airports while practicing.
+
+
+Toggle these options when setting up with Sheety
+
+
+Sheety API
+
+Avoid making too many unnecessary requests with the Sheety API while testing your code.
+The free tier for the Sheety API only allows 200 requests per month.
+
+Step 2 - Use Sheety to Read and Write Data to the Google Sheet
+Read and Write Data to your Google Sheet
+
+The goal for this step is to read and write some data to the Google Sheet.
+This way you can check if Sheety is working correctly before connecting to the Amadeus API
+and getting the actual IATA codes for each city to the Google Sheet.
+
+1. Go to the link for the starting Google Sheet and make your own copy of it.
+Then create a new project on Sheety to work with your copy of the Google sheet.
+
+Make requests using the Sheety API
+
+2. Now use the Sheety API to GET all the data in that sheet and print it out.
+
+
+3. Try importing pretty print with the line from pprint import pprint and printing the data
+   out again using pprint() to see it formatted.
+
+4. Pass everything stored in the "prices" key back to the main.py file and store it in a
+variable called sheet_data, so that you can print the sheet_data from main.py
+
+
+
+5. In main.py check if sheet_data contains any values for the "iataCode" key.
+If not, then the IATA Codes column is empty in the Google Sheet.
+In this case, pass each city name in sheet_data one-by-one to the FlightSearch class.
+For now, the FlightSearch class can respond with "TESTING" instead of a real IATA code.
+You should use the response from the FlightSearch class to update the sheet_data dictionary.
+
+
+6. In the DataManager Class make a PUT request and use the row id from sheet_data to update
+the Google Sheet with the IATA codes. (Do this using code).
+HINT: Remember to check the checkbox to allow PUT requests in Sheety.
+
+
+If successful, you should see the Google Sheet update as if by magic
+(but it's not magic, it's just code):
+
+
+IMPORTANT: The Google Sheet URL that you put into Sheety must be owned by the same
+account as the Google account you used to sign into Sheety.
+
+
+Enable Authentication with Sheety and use Environment Variables
+
+We've previously learned about how to use environment variables and how to use
+authentication. Let's bring those techniques into this capstone project.
+First, enable Basic Authentication for your sheety project.
+
+
+
+Create a .env file that will hold all your secrets like your username, password,
+and token information.
+
+
+You'll need to load the information in the .env file before you try to read from it.
+Install the python-dotenv package to help with this.
+
+
+With the package installed you can call:
+
+    load_dotenv()
+
+
+
+https://stackoverflow.com/questions/40216311/reading-in-environment-variables-from-an-environment-file

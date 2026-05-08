@@ -1,0 +1,20 @@
+type: theory
+files:
+  - name: Step 1/main.py
+    visible: true
+    learner_created: false
+  - name: __init__.py
+    visible: false
+    learner_created: false
+  - name: Step 1/solution.py
+    visible: true
+    learner_created: false
+  - name: Step 1/__init__.py
+    visible: true
+    learner_created: true
+  - name: Step 2/main.py
+    visible: true
+    learner_created: true
+status: Solved
+record: 3
+post_submission_on_open: true
